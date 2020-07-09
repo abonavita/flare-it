@@ -17,24 +17,6 @@ function cosD(a) {
 function sinD(a) {
 	return Math.sin(a * Math.PI / 180);
 }
-function applyOneTurn(plane, dt) {
-    plane.vz = plane.v * sinD(plane.p);
-    plane.vx = plane.v * cosD(plane.p);
-    plane.z = plane.z + plane.vz * dt;
-    plane.x = plane.x + plane.vx * dt;
-	plane.Cx = 0.0005 * (plane.i - 3) ** 2 + 0.01;
-	plane.Cz = (plane.i + 1 ) / 20;
-	plane.Rx = plane.K0 * plane.Cx * plane.v * plane.v;
-	plane.Rz = plane.K0 * plane.Cz * plane.v * plane.v;
-	if (plane.z<0) {
-		plane.vz = -plane.z / dt;
-		plane.z = 0
-	}
-	plane.vz = plane.vz + ((plane.Rx - plane.T) * sinD(plane.p) + plane.Rz * cosD(plane.p) - plane.W) / plane.m * dt;
-	plane.vx = plane.vx - ((plane.Rx - plane.T) * cosD(plane.p) + plane.Rz * sinD(plane.p)) / plane.m * dt;
-	plane.v = Math.sqrt( plane.vx ** 2 + plane.vz ** 2);
-	plane.p = Math.atan2(plane.vz, plane.vx) * 180 / Math.PI;
-}
 
 function Plane() {
 	// h: m, vz: 300ft/min=1.524 m/s, vp: 65kt=33.44 m/s, W: N=kg*m/s/s
@@ -47,6 +29,7 @@ function Plane() {
 	this.i = 0;
 	this.K0 = this.W * 20 / this.v / this.v; // Stable: lift=weight and i is approx 0
 	this.T = this.K0 * 0.012 * this.v * this.v; // Stable: traction=Rx
+
 	this.toString = () => {
 		return "x="+this.x.toFixed(4)
 		        +",z="+this.z.toFixed(4)
@@ -56,6 +39,24 @@ function Plane() {
 		        +",Vz="+this.vz.toFixed(4)
 		        +",i="+this.i.toFixed(4)
 		        +",p="+this.p.toFixed(4);
+	}
+	this.applyOneTurn = (dt) => {
+		this.vz = this.v * sinD(this.p);
+		this.vx = this.v * cosD(this.p);
+		this.z = this.z + this.vz * dt;
+		this.x = this.x + this.vx * dt;
+		this.Cx = 0.0005 * (this.i - 3) ** 2 + 0.01;
+		this.Cz = (this.i + 1 ) / 20;
+		this.Rx = this.K0 * this.Cx * this.v * this.v;
+		this.Rz = this.K0 * this.Cz * this.v * this.v;
+		if (this.z<0) {
+			this.vz = -this.z / dt;
+			this.z = 0
+		}
+		this.vz = this.vz + ((this.Rx - this.T) * sinD(this.p) + this.Rz * cosD(this.p) - this.W) / this.m * dt;
+		this.vx = this.vx - ((this.Rx - this.T) * cosD(this.p) + this.Rz * sinD(this.p)) / this.m * dt;
+		this.v = Math.sqrt( this.vx ** 2 + this.vz ** 2);
+		this.p = Math.atan2(this.vz, this.vx) * 180 / Math.PI;
 	}
 }
 
@@ -110,7 +111,7 @@ var intID = setInterval( () => {
 		}
 	}
 	t++;
-	applyOneTurn(acft, intervalMS / 1000);
+	acft.applyOneTurn(intervalMS / 1000);
 
 	console.log(acft.toString());
 	gdIncidence.lineTo(t, acft.i * 100);
