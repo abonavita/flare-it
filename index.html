@@ -99,27 +99,37 @@ function HeightView(containerElement = document.body) {
     }
 }
 
+function AIController() {
+	this.getIncidence = (time, plane) => {
+		if (plane.z > 1.5) {
+			// Don't do anything before 1.5m
+			return plane.i;
+		} else if (plane.vz < - 0.1 && plane.z > 0.1) {
+			// Create some lift
+			return plane.W / plane.v / plane.v / plane.K0 * 1.1 * 20 - 1;
+		} else if (plane.vz > 0) {
+			// Keep current attitude (don't dive !!!)
+			return plane.i;
+		} else {
+			return plane.W / plane.v / plane.v / plane.K0 * 20 - 1;
+		}
+	}
+	this.getPower = (time, plane) => {
+		return plane.z > 1.5 ? plane.T : 0;
+	}
+	this.started = () => { return true; }
+}
+
 var iv = new IncidenceView();
 var hv = new HeightView();
 
 var intervalMS = 20;
 var t = 0;
+var ctrlr = new AIController();
 navigator.getGamepads()[0];
 var intID = setInterval( () => {
 	var joystick = navigator.getGamepads()[0];
 	if (joystick == null) {
-		if (acft.z > 1.5) {
-		    // Maintain P=W
-		    acft.i = acft.W / acft.v / acft.v / acft.K0 * 20 - 1;
-		} else if (acft.T > 0) {
-			acft.T = 0;
-		} else if (acft.vz < - 0.5) {
-			acft.i = acft.W / acft.v / acft.v / acft.K0 * 1.3 * 20 - 1;
-		} else if (acft.vz < 0) {
-			acft.i = acft.W / acft.v / acft.v / acft.K0 * 1.1 * 20 - 1;
-		} else {
-			acft.i = acft.W / acft.v / acft.v / acft.K0 * 20 - 1;
-		}
 	} else {
 		var stick = joystick.axes[1];
 		if (t == 0 && !joystick.buttons[4].pressed) {
@@ -131,7 +141,10 @@ var intID = setInterval( () => {
 			acft.T = 0;
 		}
 	}
+	if (!ctrlr.started()) { return; }
 	t++;
+	acft.i = ctrlr.getIncidence(t, acft);
+	acft.T = ctrlr.getPower(t, acft);
 	acft.applyOneTurn(intervalMS / 1000);
 
 	console.log(acft.toString());
