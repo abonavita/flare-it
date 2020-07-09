@@ -1,13 +1,6 @@
 <!DOCTYPE html>
 <html>
 <body>
-
-<canvas id="incidence" width="500" height="150" style="border:1px solid #d3d3d3;">
-Your browser does not support the HTML5 canvas tag.</canvas>
-
-<canvas id="hauteur" width="500" height="150" style="border:1px solid #d3d3d3;">
-Your browser does not support the HTML5 canvas tag.</canvas>
-
 </body>
 <script>
 "use strict";
@@ -62,23 +55,53 @@ function Plane() {
 
 var acft = new Plane();
 
-var c = document.getElementById("incidence");
-var gdIncidence = c.getContext("2d");
-gdIncidence.beginPath();
-c = document.getElementById("hauteur");
-var gdHauteur = c.getContext("2d");
-gdHauteur.beginPath();
-gdHauteur.strokeStyle="#FF0000";
-gdHauteur.moveTo(0,100);
-gdHauteur.lineTo(300,100);
-gdHauteur.stroke();
-gdHauteur.beginPath();
-gdHauteur.strokeStyle="#00FF00";
-gdHauteur.moveTo(0,85);
-gdHauteur.lineTo(300,85);
-gdHauteur.stroke();
-gdHauteur.beginPath();
-gdHauteur.strokeStyle="#000000";
+function IncidenceView(containerElement = document.body) {
+	let canvas = document.createElement('canvas');
+	canvas.width = 500;
+	canvas.height = 150;
+	canvas.style = "border:1px solid #d3d3d3";
+	this.gd = canvas.getContext("2d");
+	containerElement.appendChild(canvas);
+    this.gd.beginPath();
+
+    this.draw = (time, plane) => {
+		this.gd.lineTo(time, plane.i * 100);
+		this.gd.stroke();
+    }
+}
+
+function HeightView(containerElement = document.body) {
+	let canvas = document.createElement('canvas');
+	canvas.width = 500;
+	canvas.height = 150;
+	canvas.style = "border:1px solid #d3d3d3";
+	this.gd = canvas.getContext("2d");
+	containerElement.appendChild(canvas);
+	this.gd.beginPath();
+	// Ground
+	this.gd.strokeStyle="#FF0000";
+	this.gd.moveTo(0, 100);
+	this.gd.lineTo(canvas.width, 100);
+	this.gd.stroke();
+	this.gd.beginPath();
+	// 1.5m height (where flaring should start)
+	this.gd.strokeStyle="#00FF00";
+	this.gd.moveTo(0, 100 - canvas.height / 10);
+	this.gd.lineTo(canvas.width, 100 - canvas.height / 10);
+	this.gd.stroke();
+	this.gd.beginPath();
+	this.gd.strokeStyle="#000000";
+    this.gd.beginPath();
+
+    this.draw = (time, plane) => {
+        this.gd.lineTo(plane.x, 100 - plane.z * 10);
+		this.gd.stroke();
+    }
+}
+
+var iv = new IncidenceView();
+var hv = new HeightView();
+
 var intervalMS = 20;
 var t = 0;
 navigator.getGamepads()[0];
@@ -112,10 +135,9 @@ var intID = setInterval( () => {
 	acft.applyOneTurn(intervalMS / 1000);
 
 	console.log(acft.toString());
-	gdIncidence.lineTo(t, acft.i * 100);
-	gdIncidence.stroke();
-	gdHauteur.lineTo(acft.x, 100 - acft.z * 10);
-	gdHauteur.stroke();
+	iv.draw(t, acft);
+	hv.draw(t, acft);
+
 	if (t === 500) {
 		clearInterval(intID);
 	}
