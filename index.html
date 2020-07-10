@@ -74,6 +74,22 @@ function IncidenceView(containerElement = document.body) {
     }
 }
 
+function LiftWeightView(containerElement = document.body) {
+	let canvas = document.createElement('canvas');
+	canvas.width = 50;
+	canvas.height = 150;
+	this.gd = canvas.getContext("2d");
+	containerElement.appendChild(canvas);
+
+    this.draw = (time, plane) => {
+    	this.gd.clearRect(0, 0, 50, 150);
+    	this.gd.fillStyle="#FF0000";
+		this.gd.fillRect(10, 50, 30, 100);
+    	this.gd.fillStyle="#00FF00";
+		this.gd.fillRect(20, 150 - 100 / plane.W * plane.Rz, 10, 100 / plane.W * plane.Rz);
+    }
+}
+
 function HeightView(containerElement = document.body) {
 	let canvas = document.createElement('canvas');
 	canvas.width = 500;
@@ -204,6 +220,7 @@ function GamepadController(gpIndex = 0, axeIndex = 1) {
 
 let iv = new IncidenceView();
 let hv = new HeightView();
+let lwv = new LiftWeightView();
 
 let intervalMS = 20;
 let t = 0;
@@ -224,6 +241,7 @@ let intID = setInterval( () => {
 	console.log(acft.toString());
 	iv.draw(t, acft);
 	hv.draw(t, acft);
+	lwv.draw(t, acft);
 
 	if (t === 500) {
 		clearInterval(intID);
