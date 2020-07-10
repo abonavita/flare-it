@@ -120,12 +120,47 @@ function AIController() {
 	this.started = () => { return true; }
 }
 
+function MouseController() {
+	this.deltaY = 0;
+	this.started = () => {
+		return false;
+	};
+	this.getPower = (time, plane) => {
+		return plane.T;
+	}
+	this.getIncidence = (time, plane) => {
+		let res = this.deltaY / 200;
+		if (res > 1) {
+			res = 1;
+		} else if (res < -1) {
+			res = -1;
+		}
+		return res;
+	}
+
+	let ctrlr = this;
+	function mouseMovedToFlare(ev) {
+		ctrlr.deltaY = ctrlr.deltaY + ev.movementY;
+	}
+	function clickedToPowerDown(ev) {
+		ctrlr.getPower = (time, plane) => { return 0; };
+		document.removeEventListener('click', clickedToPowerDown);
+	}
+	function clickedToStart(ev) {
+		ctrlr.started = () => { return true; };
+		document.removeEventListener('click', clickedToStart);
+		document.addEventListener('click', clickedToPowerDown);
+		document.addEventListener('mousemove', mouseMovedToFlare);
+	}
+	document.addEventListener('click', clickedToStart );
+}
+
 var iv = new IncidenceView();
 var hv = new HeightView();
 
 var intervalMS = 20;
 var t = 0;
-var ctrlr = new AIController();
+var ctrlr = new MouseController();
 navigator.getGamepads()[0];
 var intID = setInterval( () => {
 	var joystick = navigator.getGamepads()[0];
