@@ -1,5 +1,10 @@
 <!DOCTYPE html>
 <html>
+<head><style>
+canvas { 
+  border: 1px solid black;
+}
+</style></head>
 <body>
 </body>
 <script>
@@ -59,7 +64,6 @@ function IncidenceView(containerElement = document.body) {
 	let canvas = document.createElement('canvas');
 	canvas.width = 500;
 	canvas.height = 150;
-	canvas.style = "border:1px solid #d3d3d3";
 	this.gd = canvas.getContext("2d");
 	containerElement.appendChild(canvas);
     this.gd.beginPath();
@@ -74,7 +78,6 @@ function HeightView(containerElement = document.body) {
 	let canvas = document.createElement('canvas');
 	canvas.width = 500;
 	canvas.height = 150;
-	canvas.style = "border:1px solid #d3d3d3";
 	this.gd = canvas.getContext("2d");
 	containerElement.appendChild(canvas);
 	this.gd.beginPath();
