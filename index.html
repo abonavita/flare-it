@@ -155,27 +155,63 @@ function MouseController() {
 	document.addEventListener('click', clickedToStart );
 }
 
-var iv = new IncidenceView();
-var hv = new HeightView();
+function GamepadController(gpIndex = 0, axeIndex = 1) {
+	this.gpIndex = gpIndex;
+	this.axeIndex = axeIndex;
 
-var intervalMS = 20;
-var t = 0;
-var ctrlr = new MouseController();
-navigator.getGamepads()[0];
-var intID = setInterval( () => {
-	var joystick = navigator.getGamepads()[0];
-	if (joystick == null) {
-	} else {
-		var stick = joystick.axes[1];
-		if (t == 0 && !joystick.buttons[4].pressed) {
-			return
-		}
-		acft.i = stick / 2;
-		if (joystick.buttons[13].pressed && acft.T > 0) {
-			// Power down
-			acft.T = 0;
+	this.getIncidence = (time, plane) => {
+		let gp = navigator.getGamepads()[this.gpIndex];
+	    if (!gp) {
+	    	return plane.i;
+	    }
+		let res = gp.axes[this.axeIndex];
+		return res;
+	}
+	this.started = (time, plane) => {
+		let gp = navigator.getGamepads()[this.gpIndex];
+	    if (!gp) {
+	    	return false;
+	    }
+	    // Will start when any button pressed
+		for (const b of gp.buttons) {
+            if (b.pressed) {
+            	this.started = () => {
+            		return true;
+            	};
+            }
 		}
 	}
+	this.getPower = (time, plane) => {
+		let gp = navigator.getGamepads()[this.gpIndex];
+		// Avoid conflict with "start press"
+	    if (gp && time > 10) {
+			// Power down when any button pressed
+			for (const b of gp.buttons) {
+				if (b.pressed) {
+					this.getPower = (time, plane) => {
+						return 0;
+					};
+					return 0;
+				}
+			}
+	    }
+		return plane.T;
+	}
+}
+
+let iv = new IncidenceView();
+let hv = new HeightView();
+
+let intervalMS = 20;
+let t = 0;
+let ctrlr;
+if (navigator.getGamepads()) {
+	ctrlr = new GamepadController();
+} else {
+	ctrlr = new MouseController();
+}
+
+let intID = setInterval( () => {
 	if (!ctrlr.started()) { return; }
 	t++;
 	acft.i = ctrlr.getIncidence(t, acft);
