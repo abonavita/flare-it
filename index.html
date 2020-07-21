@@ -224,10 +224,17 @@ let lwv = new LiftWeightView();
 
 let intervalMS = 20;
 let t = 0;
-let ctrlr;
-if (navigator.getGamepads()) {
-	ctrlr = new GamepadController();
-} else {
+let ctrlr = null;
+let gpList = navigator.getGamepads();
+if (gpList) {
+	for (var i = 0; i < gpList.length; i ++) {
+		if (gpList[i]) {
+			ctrlr = new GamepadController(i);
+			break;
+		}
+	}
+}
+if (ctrlr === null) {
 	ctrlr = new MouseController();
 }
 
